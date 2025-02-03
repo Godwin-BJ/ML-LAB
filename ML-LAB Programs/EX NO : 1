@@ -1,0 +1,23 @@
+import numpy as np  # Linear algebra
+import pandas as pd  # Data processing, CSV file I/O
+import matplotlib.pyplot as plt  # Data visualization
+import os
+
+# List files in the input directory
+input_dir = "input"
+for dirname, _, filenames in os.walk(input_dir):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+# Load the housing dataset
+housing = pd.read_csv("housing.csv")
+
+# Display the first 5 rows
+print(housing.head(5))
+
+# Show dataset information
+print(housing.info())
+
+# Generate histograms for numerical features
+housing.hist(bins=50, figsize=(20, 15))
+plt.show()
