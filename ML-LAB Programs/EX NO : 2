@@ -1,0 +1,55 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, roc_curve
+import matplotlib.pyplot as plt
+
+# Load and preprocess dataset
+df = pd.read_csv("housing.csv")
+df["above_median_price"] = (df["median_house_value"] > df["median_house_value"].median()).astype(int)
+df.drop(columns=["median_house_value"], inplace=True)
+df["total_bedrooms"] = SimpleImputer(strategy="median").fit_transform(df[["total_bedrooms"]])
+df["ocean_proximity"] = LabelEncoder().fit_transform(df["ocean_proximity"])
+
+# Split data
+X, y = df.drop(columns=["above_median_price"]), df["above_median_price"]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Normalize, train model, and make predictions
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)  # Fit and transform the training data
+X_test = scaler.transform(X_test)  # Transform the test data using the already fitted scaler
+
+model = LogisticRegression().fit(X_train, y_train)
+y_prob = model.predict_proba(X_test)[:, 1]
+
+# Define a function for metrics calculation
+def calculate_metrics(y_pred):
+    return {
+        "Accuracy": accuracy_score(y_test, y_pred),
+        "Precision": precision_score(y_test, y_pred),
+        "Recall": recall_score(y_test, y_pred),
+        "F1 Score": f1_score(y_test, y_pred),
+    }
+
+# Experiment with thresholds and print metrics
+for threshold in [0.5, 0.6]:
+    y_pred = (y_prob > threshold).astype(int)
+    print(f"Classification Metrics (Threshold = {threshold}):")
+    metrics = calculate_metrics(y_pred)
+    for metric, value in metrics.items():
+        print(f"{metric}: {value:.4f}")
+    print()
+
+# Plot ROC curve
+fpr, tpr, _ = roc_curve(y_test, y_prob)
+plt.plot(fpr, tpr, label=f'ROC Curve (AUC = {roc_auc_score(y_test, y_prob):.4f})')
+plt.plot([0, 1], [0, 1], linestyle='--', color='gray')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.legend()
+plt.show()
