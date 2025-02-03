@@ -1,0 +1,30 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+
+# Load and prepare the dataset
+df = pd.read_csv("housing.csv").dropna(subset=['total_bedrooms'])
+df = pd.get_dummies(df, columns=['ocean_proximity'], drop_first=True)
+
+# Split the data
+train_set, temp_set = train_test_split(df, test_size=0.3, random_state=42)
+val_set, test_set = train_test_split(temp_set, test_size=0.5, random_state=42)
+
+# Separate features and target
+X_train, y_train = train_set.drop(columns=['median_house_value']), train_set['median_house_value']
+X_val, y_val = val_set.drop(columns=['median_house_value']), val_set['median_house_value']
+X_test, y_test = test_set.drop(columns=['median_house_value']), test_set['median_house_value']
+
+# Train and evaluate the model
+model = LinearRegression().fit(X_train, y_train)
+
+# Get R² scores
+train_r2 = r2_score(y_train, model.predict(X_train))
+val_r2 = r2_score(y_val, model.predict(X_val))
+test_r2 = r2_score(y_test, model.predict(X_test))
+
+# Print R² results
+print(f"Training Accuracy : {train_r2:.2f}")
+print(f"Validation Accuracy : {val_r2:.2f}")
+print(f"Test Accuracy : {test_r2:.2f}")
