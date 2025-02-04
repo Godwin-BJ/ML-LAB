@@ -1,0 +1,27 @@
+import numpy as np
+import scipy.io
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.impute import SimpleImputer
+import os
+
+# Load the .mat file
+file_path = "PersonGaitDataSet.mat"
+if not os.path.exists(file_path):
+    print(f"Error: {file_path} not found.")
+else:
+    mat_contents = scipy.io.loadmat(file_path)
+    X, Y = np.array(mat_contents["X"], dtype=np.float64), np.array(mat_contents["Y"]).ravel()
+
+    # Handle missing values and split data
+    X = SimpleImputer(strategy="mean").fit_transform(X)
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+
+    # Train and predict
+    nb_classifier = GaussianNB().fit(X_train, Y_train)
+    Y_pred = nb_classifier.predict(X_test)
+
+    # Evaluate and print results
+    print(f"Accuracy: {accuracy_score(Y_test, Y_pred):.2f}")
+    print(classification_report(Y_test, Y_pred, zero_division=1))
